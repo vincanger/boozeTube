@@ -1,0 +1,62 @@
+app whatYoutubeSaid {
+  wasp: {
+    version: "^0.10.2"
+  },
+  title: "whatYoutubeSaid",
+  client: {
+    rootComponent: import App from "@client/App",
+  },
+  dependencies: [
+    ("puppeteer", "19.11.1"),
+    ("googleapis", "118.0.0"),
+    ("react-youtube", "10.1.0"),
+    ("youtube-captions-scraper", "2.0.0"),
+    ("react-hot-toast", "2.4.1"),
+    ("@chakra-ui/react", "1.8.8"),
+    ("react-icons", "4.8.0"),
+    ("@emotion/react", "11.10.6"),
+    ("@emotion/styled", "11.10.6"),
+    ("framer-motion", "6.5.1"),
+    ("react-hook-form", "7.43.1"),
+  ]
+}
+
+entity YouTuber {=psl
+  id               String         @id @unique
+  name             String
+  url              String?
+  captions         Caption[]
+psl=}
+
+entity Caption {=psl
+  videoId          String        @unique
+  videoTitle       String?
+  thumbnail        String?
+  youTuber         YouTuber      @relation(fields: [youTuberId], references: [id])
+  youTuberId       String
+  captionChunks    String
+psl=}
+
+
+route RootRoute { path: "/", to: MainPage }
+page MainPage {
+  component: import { MainPage } from "@client/MainPage.tsx"
+}
+
+query getRepeatedWords {
+  fn: import { getRepeatedWords } from "@server/queries.js",
+  entities: [Caption]
+}
+
+query getCaptions {
+  fn: import { getCaptions } from "@server/queries.js",
+  entities: [Caption]
+}
+
+action scrapeCaptionsAndSave {
+  fn: import { scrapeCaptionsAndSave } from "@server/actions.js",
+  entities: [Caption, YouTuber]
+}
+
+
+

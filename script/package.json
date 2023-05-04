@@ -1,0 +1,17 @@
+{
+  "name": "script",
+  "version": "1.0.0",
+  "description": "",
+  "main": "youtubeScraper.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "googleapis": "^118.0.0",
+    "node-fetch": "^3.3.1",
+    "puppeteer": "^18.2.1",
+    "youtube-captions-scraper": "^2.0.0"
+  }
+}
