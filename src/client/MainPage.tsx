@@ -26,13 +26,11 @@ import getRepeatedWords from '@wasp/queries/getRepeatedWords';
 import type { Caption } from '@wasp/entities';
 import type { CaptionChunk } from '@wasp/shared/types';
 
-import YouTube, { YouTubeProps } from 'react-youtube';
+import YouTube, { YouTubePlayer, YouTubeProps } from 'react-youtube';
 import { Toaster, toast } from 'react-hot-toast';
 import scrapeCaptionsAndSave from '@wasp/actions/scrapeCaptionsAndSave';
 import ThemeSwitch from './theme/themeSwitcher';
 import { AnimatePresence, motion } from 'framer-motion';
-
-type YouTubePlayer = typeof YouTube;
 
 export function MainPage() {
   // const [videoId, setVideoId] = useState('w7i4amO_zaE'); // prime
@@ -43,6 +41,7 @@ export function MainPage() {
   const [counter, setCounter] = useState(0);
   const [ascOrder, setAscOrder] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [allowOptions, setAllowOptions] = useState(false); 
   const [showToast, setShowToast] = useState(false);
   const [poo, setPoo] = useState(false);
   const [captions, setCaptions] = useState<CaptionChunk[] | null>(null);
@@ -78,7 +77,7 @@ export function MainPage() {
   // TODO: when changing video id, cancel other setInterval and make YOUTUBE player pause ....
   useEffect(() => {
     if (videoId.length) {
-      setCounter(0)
+      setCounter(0);
       setCaptions(null);
       setChosenWord('');
     }
@@ -154,6 +153,7 @@ export function MainPage() {
                   {`Show advanced options`}
                 </FormLabel>
                 <Checkbox
+                  // isDisabled={!allowOptions}
                   key={'adv-options'}
                   id={'adv-options'}
                   defaultChecked={showOptions}
@@ -198,32 +198,33 @@ export function MainPage() {
               </>
             )}
           </VStack>
-          {/* if chosenWord.length < 1, show a placeholder text positioned absolutely over top the hidden Box element */}
-          {/* <Text
-            visibility={chosenWord.length < 1 ? 'visible' : 'hidden'}
-            fontSize='sm'
-            color='gray.500'
-            alignSelf='center'
-            textAlign='center'
-          >
-            Select a word to track
-          </Text> */}
-
           {videoId.length ? (
-            <YouTubePlayer
-              chosenWord={chosenWord}
-              counter={counter}
-              setCounter={setCounter}
-              captions={captions}
-              videoId={videoId}
-              showToast={showToast}
-            />
+            <Box
+              onClick={() => {
+                if (videoId.length && !chosenWord.length) {
+                  toast.error('Please select a word to track', {
+                    id: 'select-word-error',
+                  });
+                }
+              }}
+              w='full'
+              opacity={videoId.length && !chosenWord.length ? 0.5 : 1}
+            >
+              <YouTubePlayer
+                chosenWord={chosenWord}
+                setCounter={setCounter}
+                captions={captions}
+                videoId={videoId}
+                showToast={showToast}
+                setAllowOptions={setAllowOptions}
+                pointerEvents={videoId.length && !chosenWord.length ? 'none' : 'all'}
+              />
+            </Box>
           ) : (
             <VStack
               width='640px'
               height='360px'
               layerStyle={'card'}
-              // border='2px solid gray'
               borderRadius='md'
               justifyContent='center'
               alignItems='center'
@@ -240,7 +241,6 @@ export function MainPage() {
           <Spacer />
           <AnimatedCounter counter={counter} poo={poo} />
         </HStack>
-        {/* <img src={waspLogo} alt='wasp logo' /> */}
       </VStack>
     </>
   );
@@ -248,15 +248,8 @@ export function MainPage() {
 
 function AnimatedCounter({ counter, poo }: { counter: number; poo: boolean }) {
   const prevValue = usePrevious(counter);
-  // create an array with as many elements as the counter value
-  const array = new Array(prevValue).fill(0);
 
   const MotionBox = motion(HStack);
-
-  useEffect(() => {
-    console.log('prevValue:   ', prevValue);
-    console.log('counter:   ', counter);
-  }, [counter]);
 
   const variants = {
     from: () => ({
@@ -274,15 +267,24 @@ function AnimatedCounter({ counter, poo }: { counter: number; poo: boolean }) {
     }),
   };
   return (
-    <HStack pos='relative' w='100%' h='1.5em' shouldWrapChildren={true} flexWrap={'wrap'} spacing={0.5}>
-      {array.map((num, idx) => (
-        <Text fontSize='lg' key='idx' mx={0} px={0}>
-          {!poo ? '🥃' : '💩'}
-        </Text>
-      ))}
+    <HStack
+      id='static-counter'
+      pos='relative'
+      w='100%'
+      h='1.5em'
+      shouldWrapChildren={true}
+      flexWrap={'wrap'}
+      spacing={0.5}
+    >
+      {counter > 0 && new Array(prevValue).fill(0).map((num, idx) => (
+          <Text fontSize='lg' key={idx} mx={0} px={0}>
+            {!poo ? '🥃' : '💩'}
+          </Text>
+        ))}
       <AnimatePresence initial={false}>
-        {counter && counter > prevValue && (
+        
           <MotionBox
+            id={'animated-counter'}
             key={'animated-counter'}
             top={0}
             left={0}
@@ -291,61 +293,67 @@ function AnimatedCounter({ counter, poo }: { counter: number; poo: boolean }) {
             initial='from'
             animate='to'
           >
-            {new Array(counter - prevValue).fill(0).map((num, idx) => (
+            {counter > prevValue && new Array(counter - (counter - 1)).fill(0).map((num, idx) => (
               <Text fontSize='lg' key={'num' + 'idx'}>
                 {!poo ? '🥃' : '💩'}
               </Text>
             ))}
           </MotionBox>
-        )}
+
       </AnimatePresence>
     </HStack>
   );
 }
 function YouTubePlayer({
-  counter,
+  setAllowOptions,
   setCounter,
   captions,
   chosenWord,
   videoId,
   showToast,
+  pointerEvents,
 }: {
-  counter: number;
+  setAllowOptions: Dispatch<SetStateAction<boolean>>;
   setCounter: Dispatch<SetStateAction<number>>;
   captions: CaptionChunk[] | null;
   chosenWord: string;
   videoId: string;
   showToast: boolean;
+  pointerEvents: 'all' | 'none';
 }) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [prevCaption, setPrevCaption] = useState('');
-  const [currentCaption, setCurrentCaption] = useState('');
-  let getTime: NodeJS.Timer;
+  const [youtubePlayer, setYoutubePlayer] = useState<YouTubePlayer | null>(null);
+  const [getTime, setGetTime] = useState<NodeJS.Timeout>();
+
+  useEffect(() => {
+
+    youtubePlayer?.pauseVideo();
+    youtubePlayer?.seekTo(0);
+
+    return () => {
+      if (getTime) {
+        clearInterval(getTime);
+      }
+    };
+  }, [youtubePlayer, getTime]);
 
   useEffect(() => {
     console.log('currentTime >>>', currentTime);
 
-    // check to see if the current time is in the captions and if so, highlight the word
     if (captions) {
       const caption = captions.find((caption) => {
         const startTime = Number(caption.start);
-        // find how many times the chosenWord occurs within the caption.text property
-
         return currentTime >= startTime && currentTime <= startTime + 1;
       });
       console.log('caption >>>', caption);
       if (caption) {
-        setCurrentCaption(caption.text);
         if (caption.text !== prevCaption) {
-          // const regex = new RegExp('\\b' + chosenWord + '\\b', 'gi');
-          // const wordCount = (caption.text.match(regex) || []).length;
-
           const captionTextArray = caption.text.split(' ');
           const timePerWord = (Number(caption.dur) * 1000) / captionTextArray.length;
           const indexes = captionTextArray.forEach((word, index) => {
             if (word.toLowerCase().trim() === chosenWord.toLowerCase()) {
               const timeDelay = timePerWord * index;
-
               setTimeout(() => {
                 setCounter((counter) => counter + 1);
                 if (showToast) {
@@ -365,26 +373,25 @@ function YouTubePlayer({
     }
   }, [currentTime]);
 
-  useEffect(() => {
-    return () => {
-      if (getTime) {
-        clearInterval(getTime);
-      }
-    };
-  }, []);
+  const onPlayerReady: YouTubeProps['onReady'] = (event) => {
 
-  const onPlayerReady: YouTubeProps['onReady'] = (event: { target: any }) => {
-    // access to player in all event handlers via event.target
-    event.target.pauseVideo();
-    clearInterval(getTime);
-    getTime = setInterval(() => {
+    setYoutubePlayer(event.target);
+
+    const getTime = setInterval(() => {
       const currentTime = event.target.getCurrentTime() as number;
       setCurrentTime(currentTime);
     }, 1000);
+
+    setGetTime(getTime);
+    event.target.pauseVideo();
   };
 
-  const onStateChange: YouTubeProps['onStateChange'] = (event: { target: any }) => {
-    if (event.target.getPlayerState() === 2) {
+  const onStateChange: YouTubeProps['onStateChange'] = (event) => {
+    console.log('event.data >>>', event.data)
+    if (event.data === 1) {
+      // setAllowOptions(false);
+    } else {
+      // setAllowOptions(true);
     }
   };
 
@@ -397,21 +404,9 @@ function YouTubePlayer({
     },
   };
 
-  return <YouTube videoId={videoId} opts={opts} onReady={onPlayerReady} onStateChange={onStateChange} />;
+  return (
+    <Box pointerEvents={pointerEvents}>
+      <YouTube id='yt-player' videoId={videoId} opts={opts} onReady={onPlayerReady} onStateChange={onStateChange} />
+    </Box>
+  );
 }
-
-// function usePlaybackState() {
-//     const [player, setPlayer] = useState(null);
-
-//     useEffect(() => {
-//       // Load the YouTube player once the component has mounted
-//       const newPlayer = new window.YT.Player('player', {
-//         videoId,
-//         events: {
-//           onReady: () => {
-//             setPlayer(newPlayer);
-//           },
-//         },
-//       });
-//     }, []);
-// }
