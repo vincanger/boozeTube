@@ -1,8 +1,11 @@
-app whatYoutubeSaid {
+app boozeTube {
   wasp: {
     version: "^0.10.2"
   },
-  title: "whatYoutubeSaid",
+  title: "boozeTube",
+  head: [
+    // "<link rel='shortcut icon' href='/a.png' />"
+  ],
   client: {
     rootComponent: import App from "@client/App",
   },
@@ -50,6 +53,11 @@ query getRepeatedWords {
 
 query getCaptions {
   fn: import { getCaptions } from "@server/queries.js",
+  entities: [Caption]
+}
+
+query getVideoInfo {
+  fn: import { getVideoInfo } from "@server/queries.js",
   entities: [Caption]
 }
 

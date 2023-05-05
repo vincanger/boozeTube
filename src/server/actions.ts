@@ -4,27 +4,11 @@ import type { Caption } from '@wasp/entities';
 import type { CaptionChunk } from '@wasp/shared/types';
 //@ts-ignore
 import { getSubtitles } from 'youtube-captions-scraper';
-import { google } from 'googleapis';
-
-// Set up the YouTube Data API client
-const youtube = google.youtube({
-  version: 'v3',
-  auth: 'AIzaSyBOzrY6RB7gkIvrMgEVauf82cP3l7LEqnc',
-});
+import { youtube } from './utils.js';
 
 type ScrapeArgs = {
   videoId: string;
 };
-
-async function getChannelId(username: string) {
-  const response = await youtube.search.list({
-    part: ['id'],
-    type: ['channel'],
-    q: username,
-  });
-  if (!response.data.items) throw new Error('No channel found');
-  return response.data.items[0].id?.channelId;
-}
 
 export const scrapeCaptionsAndSave: ScrapeCaptionsAndSave<ScrapeArgs, Caption> = async (
   { videoId },
@@ -55,8 +39,6 @@ export const scrapeCaptionsAndSave: ScrapeCaptionsAndSave<ScrapeArgs, Caption> =
     caption.dur = String(currentStart - previousStart);
     previousStart = currentStart;
   });
-
-  console.log('captions >>> ', captions);
 
   let youTuber = await context.entities.YouTuber.findFirst({
     where: { id: channelId },

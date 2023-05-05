@@ -1,21 +1,27 @@
 import HttpError from '@wasp/core/HttpError.js';
-import type { GetCaptions, GetRepeatedWords } from '@wasp/queries/types';
-import type { Caption } from '@wasp/entities';
-import type { CaptionChunk } from '@wasp/shared/types';
+import { youtube } from './utils.js';
 import { countRepeatedWords } from './utils.js';
-//@ts-ignore
-import { getSubtitles } from 'youtube-captions-scraper';
-import { google } from 'googleapis';
-
-// Set up the YouTube Data API client
-const youtube = google.youtube({
-  version: 'v3',
-  auth: 'AIzaSyBOzrY6RB7gkIvrMgEVauf82cP3l7LEqnc',
-});
+import type { GetCaptions, GetRepeatedWords, GetVideoInfo } from '@wasp/queries/types';
+import type { CaptionChunk } from '@wasp/shared/types';
 
 type CaptionsArgs = {
   id: string;
   chosenWord: string;
+};
+
+type VideoInfoResults = { thumbnail: string | null; videoTitle: string | null; youTuberId: string };
+
+export const getVideoInfo: GetVideoInfo<{ id: string }, VideoInfoResults> = async ({ id }, context) => {
+  const info = await context.entities.Caption.findFirst({
+    where: { videoId: id },
+  });
+
+  if (!info) throw new HttpError(404, 'Video not found');
+  return {
+    thumbnail: info?.thumbnail,
+    videoTitle: info?.videoTitle,
+    youTuberId: info.youTuberId,
+  };
 };
 
 export const getRepeatedWords: GetRepeatedWords<{ id: string }, [string, number][]> = async ({ id }, context) => {
@@ -32,6 +38,7 @@ export const getRepeatedWords: GetRepeatedWords<{ id: string }, [string, number]
       .toLowerCase();
   });
 
+  console.log('captions >>> ', countRepeatedWords(captions))
   return countRepeatedWords(captions);
 };
 
@@ -40,12 +47,7 @@ export const getCaptions: GetCaptions<CaptionsArgs, CaptionChunk[]> = async ({ i
     where: { videoId: id },
   });
 
-  console.log('id >>> ', id);
-  // console.log('caption >>> ', caption);
-
-  let captions: CaptionChunk[] | undefined;
-
-  captions = JSON.parse(caption?.captionChunks || '[]') as CaptionChunk[];
+  let captions: CaptionChunk[] = JSON.parse(caption?.captionChunks || '[]')
 
   captions.forEach((caption) => {
     caption.text = caption.text
@@ -54,16 +56,22 @@ export const getCaptions: GetCaptions<CaptionsArgs, CaptionChunk[]> = async ({ i
       .toLowerCase();
   });
 
-  console.log('captions >>> ', captions);
-
   // filter caption objects if chosen word exists within the text property
   const filteredCaptions = captions.filter((caption) => {
-    // TODO: use regex to match whole words only
     const regex = new RegExp('\\b' + chosenWord.toLowerCase() + '\\b', 'gi');
     const wordCount = (caption.text.match(regex) || []).length;
     return wordCount > 0;
   });
 
-  console.log(filteredCaptions);
   return filteredCaptions;
 };
+
+async function getChannelId(username: string) {
+  const response = await youtube.search.list({
+    part: ['id'],
+    type: ['channel'],
+    q: username,
+  });
+  if (!response.data.items) throw new Error('No channel found');
+  return response.data.items[0].id?.channelId;
+}
