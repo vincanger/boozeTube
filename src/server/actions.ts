@@ -33,11 +33,16 @@ export const scrapeCaptionsAndSave: ScrapeCaptionsAndSave<ScrapeArgs, Caption> =
   })) as CaptionChunk[];
 
   if (!captions) throw new HttpError(404, 'Captions not found');
-  let previousStart = 0;
-  captions.forEach((caption) => {
+
+  captions.forEach((caption, idx) => {
     const currentStart = Number(caption.start);
-    caption.dur = String(currentStart - previousStart);
-    previousStart = currentStart;
+    const nextStart = Number(captions[idx + 1]?.start);
+    if (nextStart === undefined) return;
+    if (idx === 0) {
+      caption.dur = String(nextStart);
+    } else if (idx !== captions.length - 1) {
+      caption.dur = String(nextStart - currentStart);
+    } 
   });
 
   let youTuber = await context.entities.YouTuber.findFirst({

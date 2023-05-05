@@ -54,7 +54,7 @@ export default function App({ children }: { children: ReactNode }) {
                 />
                 <IconButton
                   as='a'
-                  href='https://github.com/wasp-lang'
+                  href='https://github.com/vincanger/boozeTube'
                   aria-label='GitHub'
                   icon={<FaGithub fontSize='1.25rem' />}
                 />

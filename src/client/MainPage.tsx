@@ -72,6 +72,7 @@ export function MainPage() {
       const videoId = params.get('v');
       if (videoId) {
         setVideoId(videoId);
+        // history.push('/' + videoId)
       }
     }
   }, []);
@@ -116,6 +117,7 @@ export function MainPage() {
       setCounter(0);
       setCaptions(null);
       setChosenWord('');
+      window.history.replaceState(null, 'boozeTube', `/?v=${videoId}`);
       if (!repeatedWords?.length) {
         setIsFetchingRptWrds(true);
       }
@@ -142,15 +144,20 @@ export function MainPage() {
                   ref={inputRef}
                   min='30'
                   fontSize={'sm'}
-                  value={videoId && `youtube.com/watch?v=${videoId}`}
+                  // value={`youtube.com/watch?v=${videoId}`}
                   placeholder='youtube.com/watch?v=hgglCqAXHuE'
                   onChange={(e) => {
                     const str = e.target.value;
                     // regex for youtube urls with v=VIDEO_ID
                     const regex = /(?:\?v=)([a-zA-Z0-9_-]{11})/;
                     const match = str.match(regex);
+                    // regex for mobile youtube urls, e.g. https://youtu.be/XTqMAoSPn8I
+                    const mobileRegex = /(?:\.be\/)([a-zA-Z0-9_-]{11})/;
+                    const mobileMatch = str.match(mobileRegex);
                     if (match) {
                       setVideoId(match[1]);
+                    } else if (mobileMatch) {
+                      setVideoId(mobileMatch[1]);
                     } else {
                       toast.error('Please enter a valid YouTube URL', {
                         id: 'youtube-url-error',

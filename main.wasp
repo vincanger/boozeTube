@@ -4,6 +4,11 @@ app boozeTube {
   },
   title: "boozeTube",
   head: [
+    "<meta property='og:type' content='website' />",
+    "<meta property='og:url' content='https://boozetube.netlify.app/' />",
+    "<meta property='og:description' content='Turn any youTube video/song into a drinking game.' />",
+    "<meta property='og:image' content='https://boozetube.netlify.app/assets/boozetube_thumbnail-6c4ea4c2.png' />",
+    "<!-- Google tag (gtag.js) --><script async src='https://www.googletagmanager.com/gtag/js?id=G-MVZ4RN2EG9'></script><script>window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-MVZ4RN2EG9');</script>",
     // "<link rel='shortcut icon' href='/a.png' />"
   ],
   client: {
