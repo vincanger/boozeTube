@@ -9,6 +9,7 @@ app boozeTube {
   client: {
     rootComponent: import App from "@client/App",
   },
+  db: { system: PostgreSQL },
   dependencies: [
     ("puppeteer", "19.11.1"),
     ("googleapis", "118.0.0"),
@@ -32,7 +33,7 @@ entity YouTuber {=psl
 psl=}
 
 entity Caption {=psl
-  videoId          String        @unique
+  videoId          String        @id @unique
   videoTitle       String?
   thumbnail        String?
   youTuber         YouTuber      @relation(fields: [youTuberId], references: [id])

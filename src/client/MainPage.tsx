@@ -45,6 +45,7 @@ export function MainPage() {
   const [poo, setPoo] = useState(false);
   const [captions, setCaptions] = useState<CaptionChunk[] | null>(null);
   const [isFetchingRptWrds, setIsFetchingRptWrds] = useState(false);
+  const [areCaptionsSaved, setAreCaptionsSaved] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
@@ -56,12 +57,14 @@ export function MainPage() {
     isFetched: isFetchedRptWrds,
     error: errorRptWrds,
   } = useQuery(getRepeatedWords, { id: videoId }, { enabled: !!videoId });
+
   const {
     data: dbCaptions,
     isFetched,
     error,
   } = useQuery(getCaptions, { id: videoId, chosenWord }, { enabled: !!chosenWord });
-  const { data: videoInfo, error: errorVideoInfo } = useQuery(getVideoInfo, { id: videoId }, { enabled: !!videoId });
+
+  const { data: videoInfo, error: errorVideoInfo } = useQuery(getVideoInfo, { id: videoId }, { enabled: !!areCaptionsSaved });
 
   useEffect(() => {
     if (location.search) {
@@ -94,7 +97,9 @@ export function MainPage() {
     const fetchCaptions = async () => {
       try {
         if (isFetchedRptWrds && videoId.length && !repeatedWords?.length) {
+          toast('Fetching captions and sorting frequent words. This can take a minute...',)
           await scrapeCaptionsAndSave({ videoId });
+          setAreCaptionsSaved(true)
         }
       } catch (error) {
         toast.error('Error fetching captions', {
@@ -111,7 +116,9 @@ export function MainPage() {
       setCounter(0);
       setCaptions(null);
       setChosenWord('');
-      setIsFetchingRptWrds(true);
+      if (!repeatedWords?.length) {
+        setIsFetchingRptWrds(true);
+      }
     }
   }, [videoId]);
 
@@ -254,7 +261,8 @@ export function MainPage() {
                   selectRef.current?.focus();
                 }
               }}
-              w='full'
+              minWidth='640px'
+              minHeight='360px'
               opacity={videoId.length && !chosenWord.length ? 0.5 : 1}
             >
               <YouTubePlayer
@@ -269,8 +277,8 @@ export function MainPage() {
             </Box>
           ) : (
             <VStack
-              width='640px'
-              height='360px'
+              minWidth='640px'
+              minHeight='360px'
               layerStyle={'card'}
               borderRadius='md'
               justifyContent='center'
