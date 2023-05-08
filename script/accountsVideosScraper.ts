@@ -4,7 +4,7 @@ import { google } from 'googleapis';
 // Set up the YouTube Data API client
 const youtube = google.youtube({
   version: 'v3',
-  auth: 'AIzaSyBOzrY6RB7gkIvrMgEVauf82cP3l7LEqnc',
+  auth: '',
 });
 
 // Set the YouTube account ID

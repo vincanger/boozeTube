@@ -64,7 +64,11 @@ export function MainPage() {
     error,
   } = useQuery(getCaptions, { id: videoId, chosenWord }, { enabled: !!chosenWord });
 
-  const { data: videoInfo, error: errorVideoInfo } = useQuery(getVideoInfo, { id: videoId }, { enabled: !!areCaptionsSaved });
+  const { data: videoInfo, error: errorVideoInfo } = useQuery(
+    getVideoInfo,
+    { id: videoId },
+    { enabled: !!areCaptionsSaved }
+  );
 
   useEffect(() => {
     if (location.search) {
@@ -88,6 +92,7 @@ export function MainPage() {
   useEffect(() => {
     if (isFetched && repeatedWords?.length && dbCaptions?.length) {
       setCaptions(dbCaptions);
+      setAreCaptionsSaved(true);
     }
   }, [repeatedWords, dbCaptions]);
 
@@ -98,9 +103,9 @@ export function MainPage() {
     const fetchCaptions = async () => {
       try {
         if (isFetchedRptWrds && videoId.length && !repeatedWords?.length) {
-          toast('Fetching captions and sorting frequent words. This can take a minute...',)
+          toast('Fetching captions and sorting frequent words. This can take a minute...');
           await scrapeCaptionsAndSave({ videoId });
-          setAreCaptionsSaved(true)
+          setAreCaptionsSaved(true);
         }
       } catch (error) {
         toast.error('Error fetching captions', {
@@ -159,9 +164,12 @@ export function MainPage() {
                     } else if (mobileMatch) {
                       setVideoId(mobileMatch[1]);
                     } else {
-                      toast.error('Please enter a valid YouTube URL', {
-                        id: 'youtube-url-error',
-                      });
+                      toast.error(
+                        'Please enter a valid YouTube URL -- e.g. https://www.youtube.com/watch?v=Gs069dndIYk',
+                        {
+                          id: 'youtube-url-error',
+                        }
+                      );
                     }
                   }}
                 />
@@ -430,6 +438,8 @@ function YouTubePlayer({
                     duration: 2000,
                   });
                 }
+              }, timeDelay);
+              setTimeout(() => {
                 if (isClinkSound) {
                   if (clink.paused) {
                     clink.currentTime = 0;
@@ -438,7 +448,7 @@ function YouTubePlayer({
                     clink.currentTime = 0;
                   }
                 }
-              }, timeDelay);
+              }, timeDelay + 300);
             }
           });
 
