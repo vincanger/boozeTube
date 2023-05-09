@@ -107,8 +107,8 @@ export function MainPage() {
           await scrapeCaptionsAndSave({ videoId });
           setAreCaptionsSaved(true);
         }
-      } catch (error) {
-        toast.error('Error fetching captions', {
+      } catch (error: any) {
+        toast.error(error?.message || 'Error fetching captions', {
           id: 'fetch-captions-error',
         });
         setIsFetchingRptWrds(false);

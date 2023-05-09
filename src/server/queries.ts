@@ -34,6 +34,8 @@ export const getRepeatedWords: GetRepeatedWords<{ id: string }, [string, number]
   captions.forEach((caption) => {
     caption.text = caption.text
       .replace(/(\r\n|\n|\r)/gm, ' ')
+      // remove all punctuation from beginning or end of words
+      .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
       .trim()
       .toLowerCase();
   });
