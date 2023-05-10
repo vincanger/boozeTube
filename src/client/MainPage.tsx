@@ -1,6 +1,6 @@
 import clinkSound from './clink.mp3';
 import thumbnail from './boozetube_thumbnail.png';
-import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Dispatch, SetStateAction } from 'react';
 import {
   Box,
   VStack,
@@ -18,7 +18,7 @@ import {
   usePrevious,
 } from '@chakra-ui/react';
 import ThemeSwitch from './theme/themeSwitcher';
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import YouTube, { YouTubePlayer, YouTubeProps } from 'react-youtube';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
@@ -67,7 +67,7 @@ export function MainPage() {
   const { data: videoInfo, error: errorVideoInfo } = useQuery(
     getVideoInfo,
     { id: videoId },
-    { enabled: !!areCaptionsSaved }
+    { enabled: areCaptionsSaved }
   );
 
   useEffect(() => {
@@ -76,7 +76,6 @@ export function MainPage() {
       const videoId = params.get('v');
       if (videoId) {
         setVideoId(videoId);
-        // history.push('/' + videoId)
       }
     }
   }, []);
@@ -119,28 +118,40 @@ export function MainPage() {
 
   useEffect(() => {
     if (videoId.length) {
+      window.history.replaceState(null, 'boozeTube', `/?v=${videoId}`);
       setCounter(0);
       setCaptions(null);
       setChosenWord('');
-      window.history.replaceState(null, 'boozeTube', `/?v=${videoId}`);
       if (!repeatedWords?.length) {
         setIsFetchingRptWrds(true);
       }
     }
   }, [videoId]);
 
+  useEffect(() => {
+    if (chosenWord.length) {
+      window.history.replaceState(null, 'boozeTube', `/?v=${videoId}&w=${chosenWord}`);
+    }
+  }, [chosenWord]);
+
+  useEffect(() => {
+    if (isFetchedRptWrds && repeatedWords?.length) {
+      const params = new URLSearchParams(location.search);
+      const wordParam = params.get('w');
+
+      if (wordParam && !chosenWord.length) {
+        const wordExists = repeatedWords.find(([word, number]) => word === wordParam);
+
+        if (wordExists) {
+          setChosenWord(wordParam);
+        }
+      }
+    }
+  }, [isFetchedRptWrds, repeatedWords]);
+
   return (
     <>
       <VStack w='666px'>
-        <Toaster
-          position='top-center'
-          toastOptions={{
-            style: {
-              background: '#363636',
-              color: '#fff',
-            },
-          }}
-        />
         <VStack layerStyle='card' p={3}>
           <VStack layerStyle='card' width='full' spacing={0}>
             <HStack p={3} width='full'>
@@ -149,7 +160,6 @@ export function MainPage() {
                   ref={inputRef}
                   min='30'
                   fontSize={'sm'}
-                  // value={`youtube.com/watch?v=${videoId}`}
                   placeholder='youtube.com/watch?v=hgglCqAXHuE'
                   onChange={(e) => {
                     const str = e.target.value;
@@ -404,6 +414,7 @@ function YouTubePlayer({
   const [youtubePlayer, setYoutubePlayer] = useState<YouTubePlayer | null>(null);
   const [getTime, setGetTime] = useState<NodeJS.Timeout>();
 
+
   useEffect(() => {
     youtubePlayer?.pauseVideo();
     youtubePlayer?.seekTo(0);
@@ -425,7 +436,7 @@ function YouTubePlayer({
       });
       console.log('caption >>>', caption);
       if (caption) {
-        if (caption.text !== prevCaption) {
+        if (JSON.stringify(caption) !== prevCaption) {
           const captionTextArray = caption.text.split(' ');
           const timePerWord = (Number(caption.dur) * 1000) / captionTextArray.length;
           const indexes = captionTextArray.forEach((word, index) => {
@@ -452,7 +463,7 @@ function YouTubePlayer({
             }
           });
 
-          setPrevCaption(caption.text);
+          setPrevCaption(JSON.stringify(caption));
         }
       }
     }

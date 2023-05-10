@@ -12,6 +12,9 @@ const variantSolid = (props: any) => {
   let hoverBg = `${c}.500`;
   let activeBg = `${c}.600`;
   let disabledBg = `${c}.300`;
+  let hoverColor = `${c}.50`;
+  let borderColor = null;
+  let hoverBorderColor = null
 
   if (c === 'contrast') {
     bg = 'bg-contrast-sm';
@@ -21,12 +24,24 @@ const variantSolid = (props: any) => {
     disabledBg = 'bg-contrast-sm';
   }
 
+  if (c === 'purple') {
+    bg = 'bg-contrast-sm';
+    color = 'text-contrast-lg';
+    hoverBg = 'bg-contrast-md';
+    activeBg = 'bg-contrast-lg';
+    disabledBg = 'purple.300';
+    hoverColor = 'purple.400';
+  }
+
   return {
     border: 'sm',
+    borderColor,
     bgColor: bg,
     color: color,
     _hover: {
       bg: hoverBg,
+      color: hoverColor,
+      borderColor: hoverBorderColor
     },
     _focus: {
       boxShadow: 'none',

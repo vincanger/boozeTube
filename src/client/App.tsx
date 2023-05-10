@@ -1,5 +1,6 @@
 import {
   ChakraProvider,
+  Box,
   VStack,
   HStack,
   Text,
@@ -7,18 +8,74 @@ import {
   Stack,
   ButtonGroup,
   IconButton,
+  Button,
   Divider,
   ColorModeScript,
 } from '@chakra-ui/react';
 import { theme } from './theme';
-import { ReactNode } from 'react';
-import { FaGithub, FaTwitter } from 'react-icons/fa';
+import { ReactNode, useEffect, useState } from 'react';
+import { FaGithub, FaTwitter, FaShareSquare } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { Toaster, toast } from 'react-hot-toast';
 
 export default function App({ children }: { children: ReactNode }) {
+  const [canCopy, setCanCopy] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const MotionButton = motion(Box);
+
+  const buttonVariants = {
+    initial: { y: 0 },
+    shake: { y: [0, -5, 0, 5, 0, -5, 0, 5, 0, -5, 0, 5, 0, -5, 0], transition: { duration: 1.5 } },
+  };
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    toast.success('Copied to clipboard!');
+  };
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const params = new URLSearchParams(window.location.search);
+      const videoId = params.get('v');
+      const word = params.get('w');
+      if (videoId && word) {
+        setCanCopy(true);
+      } 
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (!canCopy) return;
+    const timeoutId = setTimeout(() => {
+      setShake(true);
+    }, 2500);
+
+    const timeoutId2 = setTimeout(() => {
+      setShake(false);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(timeoutId2);
+    };
+  }, [canCopy]);
 
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+
+      <Toaster
+        position='top-center'
+        toastOptions={{
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
 
       {/* Container */}
       <Container display='flex' flexDirection='column' minH='100vh' minW='666px' p={0}>
@@ -44,6 +101,28 @@ export default function App({ children }: { children: ReactNode }) {
               <Text fontSize='2xl' textColor='text-contrast-lg' textAlign='start' aria-label='BoozeTube'>
                 🍺ooze🍸ube
               </Text>
+
+              {canCopy && (
+                <HStack justifyContent='center'>
+                  <MotionButton
+                    variants={buttonVariants}
+                    initial='initial'
+                    animate={shake ? 'shake' : 'initial'}
+                  >
+                    <Button
+                      id='share-btn'
+                      onClick={handleCopy}
+                      aria-label='share'
+                      fontSize='sm'
+                      colorScheme='purple'
+                      rightIcon={<FaShareSquare  />}
+                    >
+                      {'Copy sharable link'}
+                    </Button>
+                  </MotionButton>
+                </HStack>
+              )}
+
               <ButtonGroup variant='ghost'>
                 <Text fontSize='xs' textColor='text-contrast-md' alignSelf='flex-end'></Text>
                 <IconButton
