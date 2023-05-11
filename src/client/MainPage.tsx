@@ -1,8 +1,10 @@
 import clinkSound from './clink.mp3';
 import thumbnail from './boozetube_thumbnail.png';
-import React, { useState, useEffect, useRef, useMemo, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
 import {
+  AspectRatio,
   Box,
+  Stack,
   VStack,
   HStack,
   FormControl,
@@ -151,10 +153,10 @@ export function MainPage() {
 
   return (
     <>
-      <VStack w='666px'>
-        <VStack layerStyle='card' p={3}>
+      <VStack maxW='666px' width='full'>
+        <VStack layerStyle='card' p={3} width='full'>
           <VStack layerStyle='card' width='full' spacing={0}>
-            <HStack p={3} width='full'>
+            <Stack p={3} direction={['column', 'row']} width='full'>
               <FormControl flex={3} display='flex' alignItems='center' justifyContent='center'>
                 <Input
                   ref={inputRef}
@@ -227,7 +229,7 @@ export function MainPage() {
                   onChange={() => setShowOptions(!showOptions)}
                 />
               </FormControl>
-            </HStack>
+            </Stack>
             {showOptions && (
               <>
                 <Divider></Divider>
@@ -277,7 +279,9 @@ export function MainPage() {
             )}
           </VStack>
           {videoId.length ? (
-            <Box
+            <AspectRatio
+              width='full'
+              ratio={1.64}
               onClick={() => {
                 if (videoId.length && !chosenWord.length) {
                   toast.error('Please select a word to track', {
@@ -286,8 +290,8 @@ export function MainPage() {
                   selectRef.current?.focus();
                 }
               }}
-              minWidth='640px'
-              minHeight='360px'
+              maxWidth='640px'
+              maxHeight='390px'
               opacity={videoId.length && !chosenWord.length ? 0.5 : 1}
             >
               <YouTubePlayer
@@ -299,24 +303,24 @@ export function MainPage() {
                 showToast={showToast}
                 pointerEvents={videoId.length && !chosenWord.length ? 'none' : 'all'}
               />
-            </Box>
+            </AspectRatio>
           ) : (
-            <VStack
-              minWidth='640px'
-              minHeight='360px'
-              layerStyle={'card'}
-              borderRadius='md'
-              justifyContent='center'
-              alignItems='center'
-              bgImage={`url(${thumbnail})`}
-              bgSize='640px 360px'
-              bgRepeat='no-repeat'
-              onClick={() => {
-                inputRef.current?.focus();
-              }}
-            >
-              {videoId.length && !repeatedWords?.length && <Spinner />}
-            </VStack>
+            <AspectRatio width='full' maxW='640px' ratio={16 / 9}>
+              <VStack
+                layerStyle={'card'}
+                borderRadius='md'
+                justifyContent='center'
+                alignItems='center'
+                bgImage={`url(${thumbnail})`}
+                bgSize='cover'
+                bgRepeat='no-repeat'
+                onClick={() => {
+                  inputRef.current?.focus();
+                }}
+              >
+                {videoId.length && !repeatedWords?.length && <Spinner />}
+              </VStack>
+            </AspectRatio>
           )}
         </VStack>
         <HStack justifyContent='flex-start' w='full'>
@@ -413,7 +417,6 @@ function YouTubePlayer({
   const [prevCaption, setPrevCaption] = useState('');
   const [youtubePlayer, setYoutubePlayer] = useState<YouTubePlayer | null>(null);
   const [getTime, setGetTime] = useState<NodeJS.Timeout>();
-
 
   useEffect(() => {
     youtubePlayer?.pauseVideo();
