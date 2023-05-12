@@ -1,6 +1,6 @@
 import clinkSound from './clink.mp3';
 import thumbnail from './boozetube_thumbnail.png';
-import React, { useState, useEffect, useRef, useMemo, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
 import {
   Box,
   VStack,
@@ -111,6 +111,7 @@ export function MainPage() {
           id: 'fetch-captions-error',
         });
         setIsFetchingRptWrds(false);
+        // TODO: 
       }
     };
     fetchCaptions();

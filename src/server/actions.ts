@@ -31,20 +31,22 @@ export const scrapeCaptionsAndSave: ScrapeCaptionsAndSave<ScrapeArgs, Caption> =
     const captions = (await getSubtitles({
       videoID: videoId,
       lang: defaultLanguage || defaultAudioLanguage || 'en',
-    })) as CaptionChunk[];
+    })) 
+    // as CaptionChunk[];
+    console.log('captions >>> ', captions)
 
     if (!captions) throw new HttpError(404, 'Captions not found');
 
-    captions.forEach((caption, idx) => {
-      const currentStart = Number(caption.start);
-      const nextStart = Number(captions[idx + 1]?.start);
-      if (nextStart === undefined) return;
-      if (idx === 0) {
-        caption.dur = String(nextStart);
-      } else if (idx !== captions.length - 1) {
-        caption.dur = String(nextStart - currentStart);
-      }
-    });
+    // captions.forEach((caption, idx) => {
+    //   const currentStart = Number(caption.start);
+    //   const nextStart = Number(captions[idx + 1]?.start);
+    //   if (nextStart === undefined) return;
+    //   if (idx === 0) {
+    //     caption.dur = String(nextStart);
+    //   } else if (idx !== captions.length - 1) {
+    //     caption.dur = String(nextStart - currentStart);
+    //   }
+    // });
 
     let youTuber = await context.entities.YouTuber.findFirst({
       where: { id: channelId },
@@ -69,6 +71,7 @@ export const scrapeCaptionsAndSave: ScrapeCaptionsAndSave<ScrapeArgs, Caption> =
       },
     });
   } catch (error: any) {
+    console.log('error >>> ', error)
     throw new HttpError(404, error?.message || 'Captions not found');
   }
 };
