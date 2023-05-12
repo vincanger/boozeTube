@@ -41,7 +41,7 @@ export default function App({ children }: { children: ReactNode }) {
       const word = params.get('w');
       if (videoId && word) {
         setCanCopy(true);
-      } 
+      }
     }, 1000);
 
     return () => clearInterval(intervalId);
@@ -78,9 +78,9 @@ export default function App({ children }: { children: ReactNode }) {
       />
 
       {/* Container */}
-      <Container display='flex' flexDirection='column' minH='100vh' minW='666px' p={0}>
+      <Container display='flex' flexDirection='column' minH='100vh' maxW='666px' w='full' p={0}>
         {/* Content */}
-        <VStack gap={5} spacing={5} mt={5}>
+        <VStack gap={5} spacing={5} mt={5} px={{ base: '4', md: '0' }}>
           {children}
         </VStack>
 
@@ -96,7 +96,7 @@ export default function App({ children }: { children: ReactNode }) {
           py={{ base: '4', md: '6' }}
         >
           <Divider mb={6} />
-          <Stack w='full'>
+          <Stack w='full' px={{ base: '4', md: '0' }}>
             <Stack justify='space-between' direction='row' w='full' align='center'>
               <Text fontSize='2xl' textColor='text-contrast-lg' textAlign='start' aria-label='BoozeTube'>
                 🍺ooze🍸ube
