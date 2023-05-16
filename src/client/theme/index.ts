@@ -2,7 +2,7 @@ import { extendTheme } from '@chakra-ui/react';
 import { StyleFunctionProps } from '@chakra-ui/theme-tools';
 import { textStyles, fonts } from './text';
 import { semanticTokens } from './tokens';
-import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox, AlertDialog as ChakraAlertDialog, Select as ChakraSelect, Switch as ChakraSwitch } from '@chakra-ui/react';
+import { Input as ChakraInput, Button as ChakraButton, Textarea as ChakraTextarea, Checkbox as ChakraCheckbox, AlertDialog as ChakraAlertDialog, Select as ChakraSelect, Switch as ChakraSwitch, Modal as ChakraModal } from '@chakra-ui/react';
 
 const variantSolid = (props: any) => {
   const { colorScheme: c } = props;
@@ -205,6 +205,31 @@ ChakraSelect.defaultProps = {
   variant: 'filled',
 };
 
+export const Modal = {
+  baseStyle: {
+    dialog: {
+      bg: 'bg-modal',
+      color: 'text-contrast-lg',
+      border: 'sm',
+      borderColor: 'border-contrast-md',
+      boxShadow: '0px 0px 0px 1px var(--chakra-colors-active)',
+    },
+    header: {
+      color: 'text-contrast-lg',
+    },
+    footer: {
+      color: 'text-contrast-md',
+    },
+  },
+};
+
+ChakraModal.defaultProps = {
+  ...ChakraModal.defaultProps,
+  // focusBorderColor: 'purple.200',
+  // colorScheme: 'purple',
+};
+
+
 export const Switch = {
   baseStyle: {
     track: {
@@ -245,6 +270,7 @@ export const styles = {
 
 export const theme = extendTheme({
   components: {
+    Modal,
     Input,
     Textarea,
     Button,

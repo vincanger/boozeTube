@@ -1,11 +1,16 @@
-import { CaptionChunk } from "@wasp/shared/types";
+import { CaptionChunk } from '@wasp/shared/types';
 import { google } from 'googleapis';
+import { Configuration, OpenAIApi } from 'openai';
 
 export const youtube = google.youtube({
   version: 'v3',
   auth: process.env.GOOGLE_API_KEY,
 });
 
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+export const openai = new OpenAIApi(configuration);
 
 const fillers = new Set([
   'the',
@@ -61,7 +66,6 @@ const fillers = new Set([
   'even',
   'already',
   'still',
-  'more',
   'lot',
   'much',
   'very',
@@ -82,7 +86,6 @@ const fillers = new Set([
   'any',
   'some',
   'such',
-  'no',
   'none',
   'own',
   'my',
@@ -199,6 +202,11 @@ export const countRepeatedWords = (captionChunks: CaptionChunk[]) => {
 
   const words = captions.split(/\s+/);
 
+  //remove all punctuation from beginning or end of words
+  // const words = captionsWithStuff.map((word) => {
+  //   return word.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '');
+  // });
+
   const wordCounts: Map<string, number> = new Map();
 
   for (let i = 0; i < words.length; i++) {
@@ -217,4 +225,39 @@ export const countRepeatedWords = (captionChunks: CaptionChunk[]) => {
   const sortedWordCounts = Array.from(wordCounts).sort((a, b) => b[1] - a[1]);
 
   return sortedWordCounts.filter(([word, count]) => !fillers.has(word));
+};
+
+export const ytCategoryIds: Record<number, string> = {
+  1: 'Film & Animation',
+  2: 'Autos & Vehicles',
+  10: 'Music',
+  15: 'Pets & Animals',
+  17: 'Sports',
+  18: 'Short Movies',
+  19: 'Travel & Events',
+  20: 'Gaming',
+  21: 'Videoblogging',
+  22: 'People & Blogs',
+  23: 'Comedy',
+  24: 'Entertainment',
+  25: 'News & Politics',
+  26: 'Howto & Style',
+  27: 'Education',
+  28: 'Science & Technology',
+  29: 'Nonprofits & Activism',
+  30: 'Movies',
+  31: 'Anime/Animation',
+  32: 'Action/Adventure',
+  33: 'Classics',
+  34: 'Comedy',
+  35: 'Documentary',
+  36: 'Drama',
+  37: 'Family',
+  38: 'Foreign',
+  39: 'Horror',
+  40: 'Sci-Fi/Fantasy',
+  41: 'Thriller',
+  42: 'Shorts',
+  43: 'Shows',
+  44: 'Trailers',
 };

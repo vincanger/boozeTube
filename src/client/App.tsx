@@ -21,6 +21,7 @@ import { Toaster, toast } from 'react-hot-toast';
 export default function App({ children }: { children: ReactNode }) {
   const [canCopy, setCanCopy] = useState(false);
   const [shake, setShake] = useState(false);
+  const [btnSize, setBtnSize] = useState('md');
 
   const MotionButton = motion(Box);
 
@@ -63,12 +64,28 @@ export default function App({ children }: { children: ReactNode }) {
     };
   }, [canCopy]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setBtnSize('sm');
+      } else {
+        setBtnSize('md');
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <ChakraProvider theme={theme}>
       <ColorModeScript initialColorMode={theme.config.initialColorMode} />
 
       <Toaster
-        position='top-center'
+        position='bottom-center'
         toastOptions={{
           style: {
             background: '#363636',
@@ -95,88 +112,86 @@ export default function App({ children }: { children: ReactNode }) {
           role='contentinfo'
           py={{ base: '4', md: '6' }}
         >
-          <Divider mb={6} />
-          <Stack w='full' px={{ base: '4', md: '0' }}>
-            <Stack justify='space-between' direction='row' w='full' align='center'>
-              <Text fontSize='2xl' textColor='text-contrast-lg' textAlign='start' aria-label='BoozeTube'>
+          <Divider mb={[3, 6]} />
+          <Stack w='full' px={{ base: '4', md: '0' }} direction={['column', 'row']}>
+            <Stack direction='column' flex={1} spacing={[0, 2]} mb={[2, 0]} alignItems={['center', 'flex-start']}>
+              <Text fontSize={['xl', '2xl']} textColor='text-contrast-lg' textAlign='start' aria-label='BoozeTube'>
                 🍺ooze🍸ube
               </Text>
+              <Stack direction='row'>
+                <Text
+                  ml={1}
+                  as='a'
+                  transition='color 0.2s ease-out'
+                  _hover={{
+                    transition: 'color 0.2s ease-out',
+                    color: 'purple.300',
+                  }}
+                  href='https://wasp-lang.dev'
+                  fontSize={['xs', 'sm']}
+                  textColor='text-contrast-md'
+                >
+                  built with {'Wasp =} '}
+                </Text>
 
-              {canCopy && (
-                <HStack justifyContent='center'>
-                  <MotionButton
-                    variants={buttonVariants}
-                    initial='initial'
-                    animate={shake ? 'shake' : 'initial'}
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='14'
+                  height='14'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  opacity='0.6'
+                >
+                  <line x1='7' y1='17' x2='17' y2='7'></line>
+                  <polyline points='7 7 17 7 17 17'></polyline>
+                </svg>
+              </Stack>
+            </Stack>
+
+            {canCopy && (
+              <HStack justifyContent='center' flex={1}>
+                <MotionButton variants={buttonVariants} initial='initial' animate={shake ? 'shake' : 'initial'}>
+                  <Button
+                    id='share-btn'
+                    onClick={handleCopy}
+                    aria-label='share'
+                    fontSize='sm'
+                    colorScheme='purple'
+                    rightIcon={<FaShareSquare />}
+                    size={btnSize}
                   >
-                    <Button
-                      id='share-btn'
-                      onClick={handleCopy}
-                      aria-label='share'
-                      fontSize='sm'
-                      colorScheme='purple'
-                      rightIcon={<FaShareSquare  />}
-                    >
-                      {'Copy sharable link'}
-                    </Button>
-                  </MotionButton>
-                </HStack>
-              )}
-
-              <ButtonGroup variant='ghost'>
+                    {'Copy sharable link'}
+                  </Button>
+                </MotionButton>
+              </HStack>
+            )}
+            <Stack flex={1} justify='flex-end' direction={['column', 'row']} w='full' align='center'>
+              <ButtonGroup variant='ghost' size={btnSize} isAttached={btnSize === 'sm'}>
                 <Text fontSize='xs' textColor='text-contrast-md' alignSelf='flex-end'></Text>
                 <IconButton
                   as='a'
                   href='https://wasp-lang.dev'
                   aria-label='Wasp'
-                  icon={<Text fontSize='1.25rem'>{'=}'}</Text>}
+                  icon={<Text fontSize={'1.25rem'}>{'=}'}</Text>}
                 />
                 <IconButton
                   as='a'
                   href='https://github.com/vincanger/boozeTube'
                   aria-label='GitHub'
-                  icon={<FaGithub fontSize='1.25rem' />}
+                  icon={<FaGithub fontSize={'1.25rem'} />}
                 />
                 <IconButton
                   as='a'
                   href='https://twitter.com/hot_town'
                   aria-label='Twitter'
-                  icon={<FaTwitter fontSize='1.25rem' />}
+                  icon={<FaTwitter fontSize={'1.25rem'} />}
                 />
               </ButtonGroup>
             </Stack>
-            <HStack>
-              <Text
-                ml={1}
-                as='a'
-                transition='color 0.2s ease-out'
-                _hover={{
-                  transition: 'color 0.2s ease-out',
-                  color: 'purple.300',
-                }}
-                href='https://wasp-lang.dev'
-                fontSize='sm'
-                textColor='text-contrast-md'
-              >
-                built with {'Wasp =} '}
-              </Text>
-
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                width='14'
-                height='14'
-                viewBox='0 0 24 24'
-                fill='none'
-                stroke='currentColor'
-                strokeWidth='2'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                opacity='0.6'
-              >
-                <line x1='7' y1='17' x2='17' y2='7'></line>
-                <polyline points='7 7 17 7 17 17'></polyline>
-              </svg>
-            </HStack>
           </Stack>
         </Container>
       </Container>

@@ -1,6 +1,6 @@
 import clinkSound from './clink.mp3';
 import thumbnail from './boozetube_thumbnail.png';
-import React, { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Dispatch, SetStateAction } from 'react';
 import {
   AspectRatio,
   Box,
@@ -11,19 +11,24 @@ import {
   FormLabel,
   Select,
   Switch,
-  Checkbox,
+  IconButton,
   Input,
   Text,
+  Tooltip,
   Divider,
   Spacer,
   Spinner,
   usePrevious,
+  useDimensions,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import ThemeSwitch from './theme/themeSwitcher';
 import { toast } from 'react-hot-toast';
 import YouTube, { YouTubePlayer, YouTubeProps } from 'react-youtube';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
+import { FiSettings } from 'react-icons/fi';
+import { MdOutlineTranscribe } from 'react-icons/md';
 // Wasp imports 🐝 = }
 import { useQuery } from '@wasp/queries'; // Wasp uses a thin wrapper around react-query
 import getCaptions from '@wasp/queries/getCaptions';
@@ -51,12 +56,30 @@ export function MainPage() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
+  const ytRef = useRef<HTMLDivElement>(null);
 
   const location = useLocation();
+  const history = useHistory();
+
+  const parentDimensions = useDimensions(ytRef, true);
+
+  const calcWidth = useMemo(() => {
+    if (parentDimensions?.borderBox?.width) {
+      return parentDimensions.borderBox.width - 20;
+    } else {
+      return window.innerWidth - 40;
+    }
+  }, [parentDimensions]);
+
+  const dimensions = useBreakpointValue({
+    base: { width: String(calcWidth), height: String((calcWidth / 16) * 9) },
+    md: { width: '640', height: '360' },
+  });
 
   const {
     data: repeatedWords,
     isFetched: isFetchedRptWrds,
+    isFetching: isFetchingRptWrdsAgain,
     error: errorRptWrds,
   } = useQuery(getRepeatedWords, { id: videoId }, { enabled: !!videoId });
 
@@ -103,17 +126,19 @@ export function MainPage() {
     }
     const fetchCaptions = async () => {
       try {
-        if (isFetchedRptWrds && videoId.length && !repeatedWords?.length) {
-          toast('Fetching captions and sorting frequent words. This can take a minute...');
+        if (!isFetchingRptWrdsAgain && isFetchedRptWrds && videoId.length && !repeatedWords?.length) {
+          toast('Fetching captions and sorting frequent words. This can take a minute...', {
+            id: 'fetch-captions',
+          });
           await scrapeCaptionsAndSave({ videoId });
           setAreCaptionsSaved(true);
         }
       } catch (error: any) {
         toast.error(error?.message || 'Error fetching captions', {
-          id: 'fetch-captions-error',
+          id: 'fetch-captions',
         });
         setIsFetchingRptWrds(false);
-        // TODO: 
+        document.getElementById('transcribe')?.focus();
       }
     };
     fetchCaptions();
@@ -155,10 +180,10 @@ export function MainPage() {
   return (
     <>
       <VStack maxW='666px' width='full'>
-        <VStack layerStyle='card' p={3} width='full'>
+        <VStack layerStyle='card' p={3} width='full' ref={ytRef}>
           <VStack layerStyle='card' width='full' spacing={0}>
-            <Stack p={3} direction={['column', 'row']} width='full'>
-              <FormControl flex={3} display='flex' alignItems='center' justifyContent='center'>
+            <Stack p={3} direction={['column', 'row']} width='full' justifyContent='space-between'>
+              <FormControl flex={1.5} display='flex' alignItems='center' justifyContent='center'>
                 <Input
                   ref={inputRef}
                   min='30'
@@ -188,7 +213,7 @@ export function MainPage() {
                 />
               </FormControl>
               <FormControl flex={2} display='flex' alignItems='center' justifyContent='center'>
-                {isFetchingRptWrds && <Spinner />}
+                {isFetchingRptWrds && <><Spacer/><Spinner /><Spacer/></>}
                 {!isFetchingRptWrds && (
                   <Select
                     ref={selectRef}
@@ -218,17 +243,40 @@ export function MainPage() {
                           .reverse()}
                   </Select>
                 )}
-              </FormControl>
-              <FormControl flex={2} display='flex' alignItems='center' justifyContent='flex-end'>
-                <FormLabel htmlFor='adv-options' mb='0' textAlign='center' fontSize='xs' color='text-contrast-md'>
-                  {`Show advanced options`}
-                </FormLabel>
-                <Checkbox
-                  key={'adv-options'}
-                  id={'adv-options'}
-                  defaultChecked={showOptions}
-                  onChange={() => setShowOptions(!showOptions)}
-                />
+                <HStack justifyContent='flex-start' ml={2}>
+                  <FormControl>
+                    <Tooltip
+                      borderRadius='md'
+                      hasArrow
+                      label={
+                        'If captions don\'t exist, you can generate them using OpenAI\'s Whisper API'
+                      }
+                    >
+                      <IconButton
+                        icon={<MdOutlineTranscribe />}
+                        aria-label='Transcribe'
+                        key={'transcribe'}
+                        id={'transcribe'}
+                        isDisabled={!videoId.length}
+                        onClick={() => {
+                          history.push(`/transcribe/${videoId}`);
+                        }}
+                      />
+                    </Tooltip>
+                  </FormControl>
+                  <FormControl>
+                    <IconButton
+                      icon={<FiSettings />}
+                      aria-label='Show advanced options'
+                      key={'adv-options'}
+                      id={'adv-options'}
+                      // defaultChecked={showOptions}
+                      onClick={() => {
+                        setShowOptions(!showOptions);
+                      }}
+                    />
+                  </FormControl>
+                </HStack>
               </FormControl>
             </Stack>
             {showOptions && (
@@ -282,7 +330,7 @@ export function MainPage() {
           {videoId.length ? (
             <AspectRatio
               width='full'
-              ratio={1.64}
+              ratio={16 / 9}
               onClick={() => {
                 if (videoId.length && !chosenWord.length) {
                   toast.error('Please select a word to track', {
@@ -292,7 +340,7 @@ export function MainPage() {
                 }
               }}
               maxWidth='640px'
-              maxHeight='390px'
+              maxHeight='360px'
               opacity={videoId.length && !chosenWord.length ? 0.5 : 1}
             >
               <YouTubePlayer
@@ -302,6 +350,7 @@ export function MainPage() {
                 captions={captions}
                 videoId={videoId}
                 showToast={showToast}
+                dimensions={dimensions}
                 pointerEvents={videoId.length && !chosenWord.length ? 'none' : 'all'}
               />
             </AspectRatio>
@@ -405,6 +454,7 @@ function YouTubePlayer({
   videoId,
   showToast,
   pointerEvents,
+  dimensions,
 }: {
   setCounter: Dispatch<SetStateAction<number>>;
   isClinkSound: boolean;
@@ -413,6 +463,7 @@ function YouTubePlayer({
   videoId: string;
   showToast: boolean;
   pointerEvents: 'all' | 'none';
+  dimensions: { width: string; height: string } | undefined;
 }) {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [prevCaption, setPrevCaption] = useState('');
@@ -420,9 +471,6 @@ function YouTubePlayer({
   const [getTime, setGetTime] = useState<NodeJS.Timeout>();
 
   useEffect(() => {
-    youtubePlayer?.pauseVideo();
-    youtubePlayer?.seekTo(0);
-
     return () => {
       if (getTime) {
         clearInterval(getTime);
@@ -444,7 +492,8 @@ function YouTubePlayer({
           const captionTextArray = caption.text.split(' ');
           const timePerWord = (Number(caption.dur) * 1000) / captionTextArray.length;
           const indexes = captionTextArray.forEach((word, index) => {
-            if (word.toLowerCase().trim() === chosenWord.toLowerCase()) {
+            const regex = new RegExp('\\b' + chosenWord.toLowerCase().trim() + '\\b', 'gi');
+            if (word.toLowerCase().trim().match(regex)) {
               const timeDelay = timePerWord * index;
               setTimeout(() => {
                 setCounter((counter) => counter + 1);
@@ -489,8 +538,8 @@ function YouTubePlayer({
   const onStateChange: YouTubeProps['onStateChange'] = (event) => {};
 
   const opts: YouTubeProps['opts'] = {
-    height: '390',
-    width: '640',
+    height: dimensions?.height || '360',
+    width: dimensions?.width || '640',
     playerVars: {
       // https://developers.google.com/youtube/player_parameters
       autoplay: 0,

@@ -4,6 +4,7 @@ app boozeTube {
   },
   title: "boozeTube",
   head: [
+    "<script src='https://genius.codes'></script>",
     "<meta property='og:type' content='website' />",
     "<meta property='og:url' content='https://boozetube.netlify.app/' />",
     "<meta property='og:description' content='Turn any youTube video/song into a drinking game.' />",
@@ -27,6 +28,10 @@ app boozeTube {
     ("@emotion/styled", "11.10.6"),
     ("framer-motion", "6.5.1"),
     ("react-hook-form", "7.43.1"),
+    ("openai", "3.2.1"),
+    ("ytdl-core", "4.11.4"),
+    ("axios", "^0.27.2"),
+    ("cheerio", "1.0.0-rc.12")
   ]
 }
 
@@ -44,12 +49,18 @@ entity Caption {=psl
   youTuber         YouTuber      @relation(fields: [youTuberId], references: [id])
   youTuberId       String
   captionChunks    String
+  transcribedWithLyrics Boolean? 
 psl=}
 
 
 route RootRoute { path: "/", to: MainPage }
 page MainPage {
   component: import { MainPage } from "@client/MainPage.tsx"
+}
+
+route TranscribeRoute { path: "/transcribe/:videoId", to: TranscribePage }
+page TranscribePage {
+  component: import { TranscribePage } from "@client/TranscribePage.tsx"
 }
 
 query getRepeatedWords {
@@ -67,10 +78,17 @@ query getVideoInfo {
   entities: [Caption]
 }
 
+query getCaptionsInfo {
+  fn: import { getCaptionsInfo } from "@server/queries.js",
+  entities: [Caption]
+}
+
 action scrapeCaptionsAndSave {
   fn: import { scrapeCaptionsAndSave } from "@server/actions.js",
   entities: [Caption, YouTuber]
 }
 
-
-
+action generateCaptionsAndSave {
+  fn: import { generateCaptionsAndSave } from "@server/actions.js",
+  entities: [Caption, YouTuber]
+}

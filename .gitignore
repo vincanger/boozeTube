@@ -2,7 +2,9 @@
 /.env.server
 /.env.client
 /script/node_modules
+/script
 *.DS_Store
+.webm
 
 # Local Netlify folder
 .netlify
