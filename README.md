@@ -12,9 +12,15 @@ Fun! 🍻
 
 ## Running it locally
 
+This app was built using:
+- React, 
+- NodeJS, 
+- and Prisma w/ Postgres 
+via a fullstack framework called [Wasp](https://wasp-lang.dev) that makes building serverful fullstack apps fast and easy.
+
 1. Make sure you have the latest version of [Wasp](https://wasp-lang.dev) installed by running `curl -sSL https://get.wasp-lang.dev/installer.sh | sh` in your terminal.
 2. Clone this repo and `cd` into it.
-3. Make sure to get a Google API key for the youtube sdk and add it to a `.env.server` file in the root of the project. The key should be named `GOOGLE_API_KEY`.
+3. Rename the `env.server.example` file to `.env.server` in the root of the project and fill in the listed API keys. 
 4. Run `wasp db migrate-dev` and then run `wasp start`. This will init the DB, install all dependencies, and start the client and server for you :)
 5. Go to `localhost:3000` (make sure no other dev servers are running on port 3000) in your browser (your NodeJS server will be running on port `3001`)
 6. Install the Wasp extension for VSCode to get the best DX
