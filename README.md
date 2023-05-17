@@ -1,5 +1,15 @@
 # 🍺ooze🍸ube
 
+## What is this?
+[BoozeTube](https://boozetube.netlify.app) is an app that can turn almost any youtube video into a drinking game. 
+
+It works by using the [Youtube Data API](https://developers.google.com/youtube/v3) to get the video's captions. 
+If they don't exist, we download the audio source and feed it to [OpenAI's Whisper API](https://platform.openai.com/docs/guides/speech-to-text) to generate captions.
+
+Users can then select a word to track. The timestamps on the captions are then compared with the current video's playback time to calculate and alert the user each time that word appears in the audio transcript.
+
+Fun! 🍻
+
 ## Running it locally
 
 1. Make sure you have the latest version of [Wasp](https://wasp-lang.dev) installed by running `curl -sSL https://get.wasp-lang.dev/installer.sh | sh` in your terminal.
