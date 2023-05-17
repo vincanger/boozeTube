@@ -4,7 +4,7 @@ import type { Caption } from '@wasp/entities';
 import type { CaptionChunk } from '@wasp/shared/types';
 //@ts-ignore
 import { getSubtitles } from 'youtube-captions-scraper';
-import { youtube, openai, ytCategoryIds } from './utils.js';
+import { youtube, openai, ytCategoryIds, countRepeatedWords } from './utils.js';
 import fs from 'fs';
 import ytdl from 'ytdl-core';
 import path from 'path';
@@ -101,7 +101,7 @@ export const generateCaptionsAndSave: GenerateCaptionsAndSave<ScrapeArgs, Captio
       part: ['snippet'],
       id: [videoId],
     });
-
+    console.log('transcribeWithLyrics??? >>> ', transcribeWithLyrics);
     if (!vidInfo.data.items) throw new HttpError(404, 'Video not found');
 
     const description = vidInfo.data.items[0]?.snippet?.description;
@@ -132,7 +132,14 @@ export const generateCaptionsAndSave: GenerateCaptionsAndSave<ScrapeArgs, Captio
       console.error('error >>> ', error);
     }
 
-    if (captions) throw new HttpError(412, 'Captions already exist. No need to generate');
+    if (captions) {
+      const repeatedWords = countRepeatedWords(captions);
+      // if youtube captions already exist, they tend to be more accurate than openai, so there's no need to generate.
+      // but song captions often only contain the word 'music' or 'instrumental' repeated many times. In this case, we want to generate captions.
+      if (repeatedWords.length > 2) {
+        throw new HttpError(412, 'Captions already exist. No need to generate');
+      }
+    }
 
     let info = await ytdl.getInfo(videoId);
     let filteredFormat = ytdl.filterFormats(info.formats, 'audioonly');
@@ -277,7 +284,7 @@ export const generateCaptionsAndSave: GenerateCaptionsAndSave<ScrapeArgs, Captio
         youTuberId: channelId,
         thumbnail: thumbnail,
         captionChunks: JSON.stringify(timestampedCaptions),
-        transcribedWithLyrics: transcribeWithLyrics
+        transcribedWithLyrics: transcribeWithLyrics,
       },
       update: {
         captionChunks: JSON.stringify(timestampedCaptions),
