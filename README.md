@@ -1,10 +1,12 @@
 # 🍺ooze🍸ube
 
-## What is this?
+## What is this and How does it Work?
 [BoozeTube](https://boozetube.netlify.app) is an app that can turn almost any youtube video into a drinking game. 
 
 It works by using the [Youtube Data API](https://developers.google.com/youtube/v3) to get the video's captions. 
 If they don't exist, we download the audio source and feed it to [OpenAI's Whisper API](https://platform.openai.com/docs/guides/speech-to-text) to generate captions.
+
+Sometimes Whisper has trouble transcribing music with accurate timestamps. Therefore, if a user retries a transcription, we notice this and first fetch the lyrics for the song from Genius.com. Parsed song lyrics are then passed as the [prompt](https://platform.openai.com/docs/guides/speech-to-text/prompting) to Whisper's API, which tends to result in a much more accurate transcription.
 
 Users can then select a word to track. The timestamps on the captions are then compared with the current video's playback time to calculate and alert the user each time that word appears in the audio transcript.
 
