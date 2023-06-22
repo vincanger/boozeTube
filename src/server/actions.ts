@@ -123,14 +123,16 @@ export const generateCaptionsAndSave: GenerateCaptionsAndSave<ScrapeArgs, Captio
     }
 
     let captions;
+    console.log('captions>> ', captions)
     try {
       captions = (await getSubtitles({
         videoID: videoId,
         lang: defaultLanguage || defaultAudioLanguage || 'en',
       })) as CaptionChunk[];
     } catch (error) {
-      console.error('error >>> ', error);
+      console.log('error >>> ', error);
     }
+    
 
     if (captions) {
       const repeatedWords = countRepeatedWords(captions);
@@ -141,12 +143,18 @@ export const generateCaptionsAndSave: GenerateCaptionsAndSave<ScrapeArgs, Captio
       }
     }
 
-    let info = await ytdl.getInfo(videoId);
+    let info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${videoId}`, {
+      requestOptions: {
+        headers: {
+          cookie: process.env.YOUTUBE_COOKIE, // https://github.com/fent/node-ytdl-core/blob/master/example/cookies.js
+        },
+      },
+    });
     let filteredFormat = ytdl.filterFormats(info.formats, 'audioonly');
     let audioFormat = ytdl.chooseFormat(filteredFormat, {
       quality: categoryId === '10' ? 'highestaudio' : 'lowestaudio',
     });
-    console.log('info ', audioFormat);
+    console.log('audioFormat ', audioFormat);
     const audioStream = ytdl(url, { format: audioFormat }).pipe(
       fs.createWriteStream(path.join(__dirname, `${videoId}.${audioFormat.container}`))
     );
