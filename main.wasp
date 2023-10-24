@@ -1,6 +1,6 @@
 app boozeTube {
   wasp: {
-    version: "^0.10.2"
+    version: "^0.11.6"
   },
   title: "boozeTube",
   head: [
@@ -20,17 +20,17 @@ app boozeTube {
     ("puppeteer", "19.11.1"),
     ("googleapis", "118.0.0"),
     ("react-youtube", "10.1.0"),
-    ("youtube-captions-scraper", "2.0.0"),
+    ("youtube-captions-scraper", "2.0.1"),
     ("react-hot-toast", "2.4.1"),
     ("@chakra-ui/react", "1.8.8"),
     ("react-icons", "4.8.0"),
     ("@emotion/react", "11.10.6"),
     ("@emotion/styled", "11.10.6"),
     ("framer-motion", "6.5.1"),
-    ("react-hook-form", "7.43.1"),
+    ("react-hook-form", "^7.45.4"),
     ("openai", "3.2.1"),
     ("ytdl-core", "4.11.4"),
-    ("axios", "^0.27.2"),
+    ("axios", "^1.4.0"),
     ("cheerio", "1.0.0-rc.12")
   ]
 }
